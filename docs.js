@@ -1,5 +1,5 @@
 /**
- * Genes Documentation Site - Dynamic Content Generator
+ * Pinak Documentation Site - Dynamic Content Generator
  * Generates HTML body dynamically from JSON specifications
  */
 
@@ -74,7 +74,7 @@ class PinakElement extends HTMLElement {
             <i class="bi bi-search"></i>
           </button>
         </div>
-        <h1>${appSpec.title || 'Genes'}</h1>
+        <h1>${appSpec.title || 'Pinak'}</h1>
         <div class="search-container-wrapper" title="Search (Ctrl+K)">
           <div class="search-container">
             <input type="text" id="search" placeholder="search..." />
