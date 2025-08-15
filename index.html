@@ -21,17 +21,22 @@
 
 <body>
   <div id="header">
-    <button id="menu-btn" class="icon-btn" aria-label="Toggle navigation"><i data-feather="menu"></i></button>
-    <h1>Docs</h1>
-          <div class="search-container-wrapper" title="Search (Ctrl+K)">
-        <div class="search-container">
-          <input type="text" id="search" placeholder="search..." />
-          <div id="search-results"></div>
-        </div>
+    <div class="header-left">
+      <button id="menu-btn" class="icon-btn" aria-label="Toggle navigation"><i data-feather="menu"></i></button>
+    </div>
+    <h1>Markdown-docs</h1>
+    <div class="search-container-wrapper" title="Search (Ctrl+K)">
+      <div class="search-container">
+        <input type="text" id="search" placeholder="search..." />
+        <div id="search-results"></div>
       </div>
+    </div>
+          <button id="mobile-search-btn" class="icon-btn mobile-search-btn" aria-label="Search" title="Search (Ctrl+K)">
+        <i class="bi bi-search"></i>
+      </button>
     <div class="on-this-page-btn-container">
-      <button id="on-this-page-btn" class="icon-btn" aria-label="Toggle table of contents" title="On This Page (Ctrl+O)"><i
-          class="bi bi-card-list"></i></button>
+      <button id="on-this-page-btn" class="icon-btn" aria-label="Toggle table of contents"
+        title="On This Page (Ctrl+O)"><i class="bi bi-card-list"></i></button>
       <!-- On This Page Navigation -->
       <div id="on-this-page" class="on-this-page">
         <ul id="on-this-page-list"></ul>
@@ -57,21 +62,26 @@
     </div>
   </div>
 
-  <nav id="nav"></nav>
+  <nav id="nav">
+    <div class="nav-header">
+      <button id="close-nav-btn" class="icon-btn close-nav-btn" aria-label="Close navigation">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </nav>
 
   <div id="container">
     <div id="content">Loading markdown...</div>
-  </div>
-
-  <!-- Pagination Footer -->
-  <footer id="footer">
-    <div class="btn-group" role="group" aria-label="Pagination">
-      <button id="prev-btn" type="button" class="btn btn-primary" disabled aria-label="Previous"><i
-          class="bi bi-arrow-left"></i></button>
-      <button id="next-btn" type="button" class="btn btn-primary" disabled aria-label="Next"><i
-          class="bi bi-arrow-right"></i></button>
+    <!-- Pagination Navigation -->
+    <div id="pagination" class="pagination-container">
+      <div class="btn-group" role="group" aria-label="Pagination">
+        <button id="prev-btn" type="button" class="btn btn-primary" disabled aria-label="Previous"><i
+            class="bi bi-arrow-left"></i></button>
+        <button id="next-btn" type="button" class="btn btn-primary" disabled aria-label="Next"><i
+            class="bi bi-arrow-right"></i></button>
+      </div>
     </div>
-  </footer>
+  </div>
 
   <script src="docs.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>

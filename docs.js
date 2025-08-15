@@ -107,84 +107,112 @@ function closeElement(element, showClass = 'show') {
 function performSearch(query, resultsContainer, resultClass = 'search-overlay-result') {
   resultsContainer.innerHTML = '';
 
-  if (query.length < 2) return;
+  if (query.length < 2) {
+    resultsContainer.innerHTML = '<div class="search-hint">Type at least 2 characters to search...</div>';
+    return;
+  }
 
-  const results = [];
-  const queryWords = query.split(/\s+/).filter(w => w);
+  // Show loading state
+  resultsContainer.innerHTML = '<div class="search-loading">Searching...</div>';
 
-  // Search through all files
-  files.forEach(file => {
-    const title = file.name;
-    const content = file.content || '';
-    const slug = file.slug;
+  // Small delay to show loading state and prevent flickering
+  setTimeout(() => {
+    const results = [];
+    const queryWords = query.split(/\s+/).filter(w => w);
 
-    const titleMatch = title.toLowerCase().includes(query);
-    const matchedLines = [];
+    // Search through all files
+    files.forEach(file => {
+      const title = file.name;
+      const content = file.content || '';
+      const slug = file.slug;
 
-    // Search content lines
-    content.split('\n').forEach((line, index) => {
-      const lowerLine = line.toLowerCase();
-      if (queryWords.every(word => lowerLine.includes(word))) {
-        matchedLines.push({ line: line.trim(), index: index });
+      const titleMatch = title.toLowerCase().includes(query);
+      const matchedLines = [];
+
+      // Search content lines
+      content.split('\n').forEach((line, index) => {
+        const lowerLine = line.toLowerCase();
+        if (queryWords.every(word => lowerLine.includes(word))) {
+          matchedLines.push({ line: line.trim(), index: index });
+        }
+      });
+
+      if (titleMatch || matchedLines.length > 0) {
+        results.push({
+          title: title,
+          slug: slug,
+          matchedLines: matchedLines,
+          titleMatch: titleMatch
+        });
       }
     });
 
-    if (titleMatch || matchedLines.length > 0) {
-      results.push({
-        title: title,
-        slug: slug,
-        matchedLines: matchedLines,
-        titleMatch: titleMatch
+    // Display results
+    displaySearchResults(results, resultsContainer, resultClass, query);
+  }, 100);
+}
+
+/**
+ * Scrolls to a specific search result line in the content
+ * @param {Object} matchedLine - Object containing line info and index
+ */
+function scrollToSearchResult(matchedLine) {
+  const content = document.getElementById('content');
+  if (!content) {
+    return;
+  }
+
+  // Try to find the exact line in the rendered content
+  const contentLines = content.textContent.split('\n');
+  const targetLineIndex = matchedLine.index;
+  
+  if (targetLineIndex < contentLines.length) {
+    // First try to find by exact text match
+    const targetText = matchedLine.line.trim();
+    let targetElement = null;
+    
+    // Search through all elements in the content
+    const allElements = content.querySelectorAll('*');
+    
+    for (const element of allElements) {
+      if (element.textContent && element.textContent.includes(targetText)) {
+        // Check if this is the most specific match (smallest element containing the text)
+        if (!targetElement || element.children.length < targetElement.children.length) {
+          targetElement = element;
+        }
+      }
+    }
+    
+    if (targetElement) {
+      // Scroll to the target element
+      const container = document.getElementById('container');
+      const headerHeight = 60;
+      const offset = targetElement.offsetTop - headerHeight - 20;
+      
+      container.scrollTo({
+        top: Math.max(0, offset),
+        behavior: 'smooth'
+      });
+      
+      // Highlight the target element temporarily
+      targetElement.style.backgroundColor = 'rgba(var(--primary-rgb), 0.1)';
+      targetElement.style.transition = 'background-color 0.3s ease';
+      
+      setTimeout(() => {
+        targetElement.style.backgroundColor = '';
+      }, 2000);
+    } else {
+      // Fallback: scroll to approximate position based on line number
+      const container = document.getElementById('container');
+      const headerHeight = 60;
+      const contentHeight = content.scrollHeight;
+      const approximateOffset = (targetLineIndex / contentLines.length) * contentHeight;
+      
+      container.scrollTo({
+        top: Math.max(0, approximateOffset - headerHeight),
+        behavior: 'smooth'
       });
     }
-  });
-
-  // Display results
-  if (results.length > 0) {
-    results.forEach(result => {
-      const resultLink = document.createElement('a');
-      resultLink.href = `#${result.slug}`;
-      resultLink.className = resultClass;
-
-      let snippetHTML = '';
-      if (result.matchedLines.length > 0) {
-        const snippetText = result.matchedLines[0].line;
-        snippetHTML = `<div class="${resultClass}-snippet">${highlightText(snippetText, query)}</div>`;
-      } else if (result.titleMatch) {
-        snippetHTML = `<div class="${resultClass}-snippet"><em>Match in title</em></div>`;
-      }
-
-      resultLink.innerHTML = `
-        <div class="${resultClass}-title">${highlightText(result.title, query)}</div>
-        ${snippetHTML}
-      `;
-
-      // Handle result click
-      resultLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        const slug = new URL(resultLink.href).hash.substring(1);
-        
-        // Close search overlay if open
-        if (searchOverlay.classList.contains('active')) {
-          hideSearchOverlay();
-        }
-        
-        // Hide original search results
-        if (searchResults) {
-          searchResults.style.display = 'none';
-          searchInput.value = '';
-        }
-
-        navigateToSlug(slug);
-      });
-
-      resultsContainer.appendChild(resultLink);
-    });
-  } else {
-    const noResults = document.createElement('div');
-    noResults.className = resultClass;
-    noResults.innerHTML = `<div class="${resultClass}-snippet">No results found</div>`;
-    resultsContainer.appendChild(noResults);
   }
 }
 
@@ -270,10 +298,29 @@ function renderNav() {
   // Create navigation structure
   labelOrder.forEach(label => {
     const sectionLi = document.createElement('li');
-    sectionLi.textContent = label;
-    sectionLi.className = 'nav-section';
-    ul.appendChild(sectionLi);
-
+    sectionLi.className = 'nav-section-container';
+    
+    // Create section header with toggle button
+    const sectionHeader = document.createElement('div');
+    sectionHeader.className = 'nav-section-header';
+    
+    const sectionTitle = document.createElement('span');
+    sectionTitle.textContent = label;
+    sectionTitle.className = 'nav-section-title';
+    
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'nav-section-toggle';
+    toggleBtn.innerHTML = '<i class="bi bi-chevron-down"></i>';
+    toggleBtn.setAttribute('aria-label', `Toggle ${label} section`);
+    
+    sectionHeader.appendChild(sectionTitle);
+    sectionHeader.appendChild(toggleBtn);
+    sectionLi.appendChild(sectionHeader);
+    
+    // Create documents container
+    const docsContainer = document.createElement('ul');
+    docsContainer.className = 'nav-docs-list';
+    
     // Add documents under this section
     groups[label].forEach(file => {
       const li = document.createElement('li');
@@ -282,8 +329,31 @@ function renderNav() {
       a.href = `#${file.slug}`;
       a.textContent = file.name;
       li.appendChild(a);
-      ul.appendChild(li);
+      docsContainer.appendChild(li);
     });
+    
+    sectionLi.appendChild(docsContainer);
+    
+    // Add click handler for section toggle
+    sectionHeader.addEventListener('click', () => {
+      const isExpanded = sectionLi.classList.contains('expanded');
+      if (isExpanded) {
+        sectionLi.classList.remove('expanded');
+        toggleBtn.innerHTML = '<i class="bi bi-chevron-down"></i>';
+      } else {
+        sectionLi.classList.add('expanded');
+        toggleBtn.innerHTML = '<i class="bi bi-chevron-up"></i>';
+      }
+    });
+    
+    // Expand the section containing the current active page
+    const currentSlug = location.hash.substring(1);
+    if (currentSlug && groups[label].some(file => file.slug === currentSlug)) {
+      sectionLi.classList.add('expanded');
+      toggleBtn.innerHTML = '<i class="bi bi-chevron-up"></i>';
+    }
+    
+    ul.appendChild(sectionLi);
   });
 
   nav.appendChild(ul);
@@ -294,9 +364,26 @@ function renderNav() {
  * @param {string} slug - Current active slug
  */
 function setActiveLink(slug) {
+  // Remove active class from all links
   document.querySelectorAll('#nav a').forEach(a => {
-    a.classList.toggle('active', a.getAttribute('href') === `#${slug}`);
+    a.classList.remove('active');
   });
+  
+  // Add active class to current link
+  const activeLink = document.querySelector(`#nav a[href="#${slug}"]`);
+  if (activeLink) {
+    activeLink.classList.add('active');
+    
+    // Ensure the section containing this link is expanded
+    const sectionContainer = activeLink.closest('.nav-section-container');
+    if (sectionContainer && !sectionContainer.classList.contains('expanded')) {
+      sectionContainer.classList.add('expanded');
+      const toggleBtn = sectionContainer.querySelector('.nav-section-toggle');
+      if (toggleBtn) {
+        toggleBtn.innerHTML = '<i class="bi bi-chevron-up"></i>';
+      }
+    }
+  }
 }
 
 /**
@@ -346,6 +433,7 @@ function updatePagination(currentSlug) {
  * Enhances code blocks with syntax highlighting and copy buttons
  */
 function enhanceCodeBlocks() {
+  // Enhance code blocks
   document.querySelectorAll('#content pre code').forEach(block => {
     // Syntax highlighting
     if (window.hljs) {
@@ -381,6 +469,26 @@ function enhanceCodeBlocks() {
     btn.style.top = '8px';
     btn.style.right = '8px';
     block.parentNode.appendChild(btn);
+  });
+
+  // Enhance tables for mobile responsiveness and Bootstrap styling
+  document.querySelectorAll('#content table').forEach(table => {
+    // Add Bootstrap table classes
+    table.classList.add('table', 'table-striped', 'table-hover', 'table-bordered', 'table-sm');
+    
+    const headers = table.querySelectorAll('th');
+    const rows = table.querySelectorAll('tbody tr');
+    
+    if (headers.length > 0) {
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        cells.forEach((cell, index) => {
+          if (headers[index]) {
+            cell.setAttribute('data-label', headers[index].textContent.trim());
+          }
+        });
+      });
+    }
   });
 }
 
@@ -499,6 +607,85 @@ function setupIntersectionObserver() {
   });
 }
 
+/**
+ * Displays search results in the specified container
+ * @param {Array} results - Array of search results
+ * @param {HTMLElement} resultsContainer - Container to display results
+ * @param {string} resultClass - CSS class for result items
+ * @param {string} query - Search query for highlighting
+ */
+function displaySearchResults(results, resultsContainer, resultClass, query) {
+  resultsContainer.innerHTML = '';
+
+  if (results.length > 0) {
+    results.forEach(result => {
+      const resultLink = document.createElement('a');
+      resultLink.href = `#${result.slug}`;
+      resultLink.className = resultClass;
+
+      let snippetHTML = '';
+      if (result.matchedLines.length > 0) {
+        const snippetText = result.matchedLines[0].line;
+        // Convert markdown to HTML for better display
+        let renderedSnippet;
+        try {
+          renderedSnippet = md && md.renderInline ? md.renderInline(snippetText) : snippetText;
+        } catch (e) {
+          console.warn('Failed to render markdown snippet:', e);
+          renderedSnippet = snippetText;
+        }
+        snippetHTML = `<div class="${resultClass}-snippet">${highlightText(renderedSnippet, query)}</div>`;
+      } else if (result.titleMatch) {
+        snippetHTML = `<div class="${resultClass}-snippet"><em>Match in title</em></div>`;
+      }
+
+      resultLink.innerHTML = `
+        <div class="${resultClass}-title">${highlightText(result.title, query)}</div>
+        ${snippetHTML}
+      `;
+
+      // Store search data for navigation
+      resultLink.dataset.searchData = JSON.stringify({
+        slug: result.slug,
+        matchedLines: result.matchedLines
+      });
+
+      // Handle result click
+      resultLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Close search overlay if open
+        if (searchOverlay.classList.contains('active')) {
+          hideSearchOverlay();
+        }
+        
+        // Hide original search results
+        if (searchResults) {
+          searchResults.style.display = 'none';
+          searchInput.value = '';
+        }
+
+        // Navigate to the document
+        navigateToSlug(result.slug);
+        
+        // Scroll to the first matched line after content loads
+        if (result.matchedLines.length > 0) {
+          setTimeout(() => {
+            scrollToSearchResult(result.matchedLines[0]);
+          }, 300); // Wait for content to render
+        }
+      });
+
+      resultsContainer.appendChild(resultLink);
+    });
+  } else {
+    const noResults = document.createElement('div');
+    noResults.className = resultClass;
+    noResults.innerHTML = `<div class="${resultClass}-snippet">No results found</div>`;
+    resultsContainer.appendChild(noResults);
+  }
+}
+
 // ============================================================================
 // EVENT LISTENERS
 // ============================================================================
@@ -510,6 +697,10 @@ function setupEventListeners() {
   // Search overlay events
   searchInput?.addEventListener('click', showSearchOverlay);
   closeSearchOverlayBtn?.addEventListener('click', hideSearchOverlay);
+  
+  // Mobile search button
+  const mobileSearchBtn = document.getElementById('mobile-search-btn');
+  mobileSearchBtn?.addEventListener('click', showSearchOverlay);
   
   // Search overlay click outside
   searchOverlay?.addEventListener('click', (e) => {
@@ -524,18 +715,8 @@ function setupEventListeners() {
     performSearch(query, searchOverlayResults, 'search-overlay-result');
   });
   
-  // Original search input (for backward compatibility)
-  searchInput?.addEventListener('input', () => {
-    const query = searchInput.value.toLowerCase().trim();
-    
-    if (query.length < 2) {
-      searchResults.style.display = 'none';
-      return;
-    }
-    
-    performSearch(query, searchResults, 'result');
-    searchResults.style.display = 'block';
-  });
+  // Remove the conflicting input event from the main search input
+  // It should only show the overlay, not perform inline search
   
   // Hide search results when clicking outside
   document.addEventListener('click', (e) => {
