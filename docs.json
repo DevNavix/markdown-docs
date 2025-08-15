@@ -3,6 +3,11 @@
     "name": "Readme",
     "doc-section": "Readme",
     "path": "README.md"
+  },
+    {
+    "name": "Description",
+    "doc-section": "Description",
+    "path": "README.md"
   }
 
 ]
