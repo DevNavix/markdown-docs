@@ -1,5 +1,5 @@
 /**
- * Pinak Documentation Site - Dynamic Content Generator
+ * Genes Documentation Site - Dynamic Content Generator
  * Generates HTML body dynamically from JSON specifications
  */
 
@@ -14,127 +14,186 @@ let appSpec = null;
 let files = [];
 
 /** @type {Object} Markdown-it instance for rendering markdown */
-const md = window.markdownit({
-  html: true,
-  linkify: true
-});
+let md = null;
 
 /** @type {Object|null} Intersection observer for table of contents */
 let onThisPageObserver = null;
 
+// Initialize markdown-it when the library is available
+function initializeMarkdown() {
+  if (window.markdownit && !md) {
+    md = window.markdownit({
+      html: true,
+      linkify: true
+    });
+    console.log('Markdown-it initialized successfully');
+  }
+}
+
+// Check for markdown-it availability
+if (window.markdownit) {
+  initializeMarkdown();
+} else {
+  // Wait for markdown-it to load
+  window.addEventListener('load', () => {
+    if (window.markdownit) {
+      initializeMarkdown();
+    }
+  });
+}
+
 // ============================================================================
-// PINAK TAG IMPLEMENTATION
+// MAIN APPLICATION INITIALIZATION
 // ============================================================================
 
 /**
- * Custom element for pinak tag functionality
+ * Main application class
  */
-class PinakElement extends HTMLElement {
+class GenesDocumentationApp {
   constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
+    this.specUrl = 'docs.json';
+    this.init();
   }
 
-  connectedCallback() {
-    const specUrl = this.getAttribute('spec-url');
-    if (specUrl) {
-      this.loadSpecifications(specUrl);
-    }
-  }
-
-  async loadSpecifications(specUrl) {
+  async init() {
+    console.log('Initializing Genes Documentation App...');
+    
     try {
-      const response = await fetch(specUrl);
-      if (!response.ok) throw new Error('Failed to fetch specifications');
+      // Wait for markdown-it to be available
+      if (!md) {
+        console.log('Waiting for markdown-it to be available...');
+        await this.waitForMarkdownIt();
+      }
       
-      appSpec = await response.json();
+      // Load specifications
+      await this.loadSpecifications();
+      
+      // Generate application
       this.generateApplication();
+      
     } catch (error) {
-      console.error('Error loading specifications:', error);
-      this.showError('Failed to load application specifications');
+      console.error('Error initializing application:', error);
+      this.showError('Failed to initialize application: ' + error.message);
     }
+  }
+
+  waitForMarkdownIt() {
+    return new Promise((resolve) => {
+      if (md) {
+        resolve();
+        return;
+      }
+      
+      const checkInterval = setInterval(() => {
+        if (md) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+      
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('Timeout waiting for markdown-it');
+        resolve(); // Continue anyway
+      }, 10000);
+    });
+  }
+
+  async loadSpecifications() {
+    console.log('Loading specifications from:', this.specUrl);
+    const response = await fetch(this.specUrl);
+    if (!response.ok) throw new Error('Failed to fetch specifications');
+    
+    appSpec = await response.json();
+    console.log('Loaded app specifications:', appSpec);
   }
 
   generateApplication() {
-    // Generate the complete HTML structure
+    console.log('Generating application...');
     this.generateHTMLStructure();
-    
-    // Initialize the application
     this.initializeApp();
   }
 
   generateHTMLStructure() {
+    console.log('Generating HTML structure...');
+    
+    // Clear existing content
+    document.body.innerHTML = '';
+    
     const htmlStructure = `
-      <div id="header">
-        <div class="header-left">
-          <button id="menu-btn" class="icon-btn" aria-label="Toggle navigation">
+      <div id="header" style="background: #f8f9fa; padding: 1rem; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between;">
+        <div class="header-left" style="display: flex; align-items: center; gap: 1rem;">
+          <button id="menu-btn" class="icon-btn" aria-label="Toggle navigation" style="padding: 0.5rem; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">
             <i data-feather="menu"></i>
           </button>
-          <button id="mobile-search-btn" class="icon-btn mobile-search-btn" aria-label="Search" title="Search (Ctrl+K)">
+          <button id="mobile-search-btn" class="icon-btn mobile-search-btn" aria-label="Search" title="Search (Ctrl+K)" style="padding: 0.5rem; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">
             <i class="bi bi-search"></i>
           </button>
         </div>
-        <h1>${appSpec.title || 'Pinak'}</h1>
-        <div class="search-container-wrapper" title="Search (Ctrl+K)">
+        <h1 style="margin: 0; color: #333;">${appSpec.title || 'Genes'}</h1>
+        <div class="search-container-wrapper" title="Search (Ctrl+K)" style="display: flex; align-items: center; gap: 1rem;">
           <div class="search-container">
-            <input type="text" id="search" placeholder="search..." />
+            <input type="text" id="search" placeholder="search..." style="padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 4px;" />
             <div id="search-results"></div>
           </div>
-        </div>
-        <div class="on-this-page-btn-container">
-          <button id="on-this-page-btn" class="icon-btn" aria-label="Toggle table of contents" title="On This Page (Ctrl+O)">
-            <i class="bi bi-card-list"></i>
-          </button>
-          <div id="on-this-page" class="on-this-page">
-            <ul id="on-this-page-list"></ul>
+          <div class="on-this-page-btn-container">
+            <button id="on-this-page-btn" class="icon-btn" aria-label="Toggle table of contents" title="On This Page (Ctrl+O)" style="padding: 0.5rem; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">
+              <i class="bi bi-card-list"></i>
+            </button>
+            <div id="on-this-page" class="on-this-page">
+              <ul id="on-this-page-list"></ul>
+            </div>
           </div>
+          <button id="theme-btn" class="icon-btn" aria-label="Toggle dark mode" title="Toggle dark/light" style="padding: 0.5rem; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">
+            <i class="bi bi-moon-stars-fill"></i>
+          </button>
         </div>
-        <button id="theme-btn" class="icon-btn" aria-label="Toggle dark mode" title="Toggle dark/light">
-          <i class="bi bi-moon-stars-fill"></i>
-        </button>
       </div>
 
       <!-- Search Overlay Modal -->
-      <div id="search-overlay" class="search-overlay">
-        <div class="search-overlay-content">
-          <div class="search-overlay-header">
+      <div id="search-overlay" class="search-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div class="search-overlay-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 8px; width: 80%; max-width: 600px;">
+          <div class="search-overlay-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h2>Search content or any topic</h2>
-            <button id="close-search-overlay" class="close-search-overlay-btn" aria-label="Close search">
+            <button id="close-search-overlay" class="close-search-overlay-btn" aria-label="Close search" style="padding: 0.5rem; border: none; background: none; cursor: pointer; font-size: 1.5rem;">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
           <div class="search-overlay-input-container">
-            <input type="text" id="search-overlay-input" placeholder="Type to search titles or content..." autofocus />
+            <input type="text" id="search-overlay-input" placeholder="Type to search titles or content..." autofocus style="width: 100%; padding: 1rem; border: 1px solid #dee2e6; border-radius: 4px; font-size: 1.1rem;" />
             <div id="search-overlay-results"></div>
           </div>
         </div>
       </div>
 
-      <nav id="nav">
-        <div class="nav-header">
-          <button id="close-nav-btn" class="icon-btn close-nav-btn" aria-label="Close navigation">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-      </nav>
+      <div style="display: flex; height: calc(100vh - 80px);">
+        <nav id="nav" style="background: #f8f9fa; padding: 1rem; border-right: 1px solid #dee2e6; width: 250px; overflow-y: auto;">
+          <div class="nav-header" style="margin-bottom: 1rem;">
+            <button id="close-nav-btn" class="icon-btn close-nav-btn" aria-label="Close navigation" style="padding: 0.5rem; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </nav>
 
-      <div id="container">
-        <div id="content">Loading markdown...</div>
-        <div id="pagination" class="pagination-container">
-          <div class="btn-group" role="group" aria-label="Pagination">
-            <button id="prev-btn" type="button" class="btn btn-primary" disabled aria-label="Previous">
-              <i class="bi bi-arrow-left"></i>
-            </button>
-            <button id="next-btn" type="button" class="btn btn-primary" disabled aria-label="Next">
-              <i class="bi bi-arrow-right"></i>
-            </button>
+        <div id="container" style="flex: 1; padding: 2rem; overflow-y: auto;">
+          <div id="content" style="min-height: 400px; background: white; padding: 2rem; border: 1px solid #dee2e6; border-radius: 4px;">Loading markdown...</div>
+          <div id="pagination" class="pagination-container" style="margin-top: 2rem; text-align: center;">
+            <div class="btn-group" role="group" aria-label="Pagination">
+              <button id="prev-btn" type="button" class="btn btn-primary" disabled aria-label="Previous" style="padding: 0.5rem 1rem; margin: 0 0.25rem; border: 1px solid #007bff; background: #007bff; color: white; border-radius: 4px; cursor: pointer;">
+                <i class="bi bi-arrow-left"></i>
+              </button>
+              <button id="next-btn" type="button" class="btn btn-primary" disabled aria-label="Next" style="padding: 0.5rem 1rem; margin: 0 0.25rem; border: 1px solid #007bff; background: #007bff; color: white; border-radius: 4px; cursor: pointer;">
+                <i class="bi bi-arrow-right"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     `;
 
-    // Insert the generated HTML into the body
-    document.body.insertAdjacentHTML('beforeend', htmlStructure);
+    document.body.innerHTML = htmlStructure;
+    console.log('HTML structure inserted');
   }
 
   showError(message) {
@@ -172,6 +231,7 @@ class PinakElement extends HTMLElement {
     }
 
     files = appSpec.documentation.files;
+    console.log('Documentation files to load:', files);
     
     // Add slugs to files
     files.forEach(file => {
@@ -187,14 +247,17 @@ class PinakElement extends HTMLElement {
         })
         .then(text => {
           file.content = text;
+          console.log(`Loaded content for ${file.name}:`, text.substring(0, 100) + '...');
           return file;
         })
     );
 
     await Promise.all(contentPromises);
+    console.log('All documentation files loaded successfully');
   }
 
   setupApplication() {
+    console.log('Setting up application...');
     // Render navigation
     this.renderNav();
     
@@ -203,6 +266,7 @@ class PinakElement extends HTMLElement {
     
     // Load initial content
     const slug = location.hash.substring(1) || (files[0] ? files[0].slug : '');
+    console.log('Loading initial content with slug:', slug);
     this.loadMarkdown(slug);
     this.updatePagination(slug);
   }
@@ -320,23 +384,40 @@ class PinakElement extends HTMLElement {
   }
 
   loadMarkdown(slug) {
+    console.log('Loading markdown for slug:', slug);
     const file = files.find(f => f.slug === slug);
 
     if (file && typeof file.content !== 'undefined') {
-      document.getElementById('content').innerHTML = md.render(file.content);
+      console.log('Found file:', file.name, 'with content length:', file.content.length);
       
-      // Scroll container to top
-      const containerEl = document.getElementById('container');
-      if (containerEl) {
-        containerEl.scrollTo({ top: 0 });
+      // Check if markdown-it is available
+      if (!md) {
+        console.error('markdown-it not available');
+        document.getElementById('content').innerHTML = 'Error: markdown-it library not loaded';
+        return;
       }
       
-      this.setActiveLink(slug);
-      this.enhanceCodeBlocks();
-      this.generateTableOfContents();
+      try {
+        const renderedContent = md.render(file.content);
+        console.log('Rendered content length:', renderedContent.length);
+        document.getElementById('content').innerHTML = renderedContent;
+        
+        // Scroll container to top
+        const containerEl = document.getElementById('container');
+        if (containerEl) {
+          containerEl.scrollTo({ top: 0 });
+        }
+        
+        this.setActiveLink(slug);
+        this.enhanceCodeBlocks();
+        this.generateTableOfContents();
+      } catch (error) {
+        console.error('Error rendering markdown:', error);
+        document.getElementById('content').innerHTML = 'Error rendering markdown content';
+      }
     } else {
+      console.error('File not found or content not loaded for slug:', slug);
       document.getElementById('content').innerHTML = 'Failed to load Markdown file.';
-      console.error(`Content for ${slug} not pre-loaded or file not found.`);
     }
   }
 
@@ -584,6 +665,8 @@ class PinakElement extends HTMLElement {
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.search-container-wrapper')) {
         if (searchResults) searchResults.style.display = 'none';
+        const searchInput = document.getElementById('search');
+        if (searchInput) searchInput.value = '';
       }
     });
     
@@ -661,7 +744,7 @@ class PinakElement extends HTMLElement {
     const searchInput = document.getElementById('search');
     
     if (searchOverlay) {
-      searchOverlay.classList.add('active');
+      searchOverlay.style.display = 'block';
       searchOverlayInput.focus();
       document.body.style.overflow = 'hidden';
     }
@@ -673,7 +756,7 @@ class PinakElement extends HTMLElement {
     const searchOverlayResults = document.getElementById('search-overlay-results');
     
     if (searchOverlay) {
-      searchOverlay.classList.remove('active');
+      searchOverlay.style.display = 'none';
       searchOverlayInput.value = '';
       searchOverlayResults.innerHTML = '';
       document.body.style.overflow = '';
@@ -769,7 +852,7 @@ class PinakElement extends HTMLElement {
           
           // Close search overlay if open
           const searchOverlay = document.getElementById('search-overlay');
-          if (searchOverlay.classList.contains('active')) {
+          if (searchOverlay.style.display === 'block') {
             this.hideSearchOverlay();
           }
           
@@ -853,7 +936,7 @@ class PinakElement extends HTMLElement {
         });
         
         // Highlight the target element temporarily
-        targetElement.style.backgroundColor = 'rgba(var(--primary-rgb), 0.1)';
+        targetElement.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
         targetElement.style.transition = 'background-color 0.3s ease';
         
         setTimeout(() => {
@@ -890,7 +973,7 @@ class PinakElement extends HTMLElement {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
       const searchOverlay = document.getElementById('search-overlay');
-      if (searchOverlay.classList.contains('active')) {
+      if (searchOverlay.style.display === 'block') {
         this.hideSearchOverlay();
       } else {
         this.showSearchOverlay();
@@ -920,5 +1003,7 @@ class PinakElement extends HTMLElement {
   }
 }
 
-// Register the custom element
-customElements.define('pinak', PinakElement); 
+// Initialize the application when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  new GenesDocumentationApp();
+}); 
