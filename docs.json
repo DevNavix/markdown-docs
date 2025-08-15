@@ -1,8 +1,122 @@
-[
-  {
-    "name": "Readme",
-    "doc-section": "Readme",
-    "path": "README.md"
+{
+  "title": "Genes Documentation",
+  "description": "A lightweight, opinionated Go framework that helps you focus on your application logic",
+  "version": "1.0.0",
+  "author": "Genes Team",
+  "theme": {
+    "primary": "#2B65F0",
+    "darkMode": true
+  },
+  "documentation": {
+    "files": [
+      {
+        "name": "Quick Start",
+        "path": "quick_start.md",
+        "doc-section": "Getting Started",
+        "description": "Get started with Genes framework in minutes",
+        "order": 1
+      },
+      {
+        "name": "Core Concepts",
+        "path": "docs/appvital/core.md",
+        "doc-section": "AppVital",
+        "description": "Core concepts and architecture of Genes",
+        "order": 2
+      },
+      {
+        "name": "Context Management",
+        "path": "docs/appvital/context.md",
+        "doc-section": "AppVital",
+        "description": "Understanding context propagation in Genes",
+        "order": 3
+      },
+      {
+        "name": "IP Resolver",
+        "path": "docs/appvital/ip_resolver.md",
+        "doc-section": "AppVital",
+        "description": "IP resolution and client detection",
+        "order": 4
+      },
+      {
+        "name": "MongoDB Client",
+        "path": "docs/container/mongo_client.md",
+        "doc-section": "Container",
+        "description": "MongoDB integration and client management",
+        "order": 5
+      },
+      {
+        "name": "HTTP Response & ResponseWriter",
+        "path": "docs/http/response_&_responsewriter.md",
+        "doc-section": "HTTP",
+        "description": "HTTP response handling and writing",
+        "order": 6
+      },
+      {
+        "name": "Request & Methods",
+        "path": "docs/http/request.md",
+        "doc-section": "HTTP",
+        "description": "HTTP request handling and methods",
+        "order": 7
+      },
+      {
+        "name": "Environment Loading",
+        "path": "docs/auxiliaryparts/envload.md",
+        "doc-section": "Auxiliary Parts",
+        "description": "Environment variable loading and configuration",
+        "order": 8
+      },
+      {
+        "name": "Configuration",
+        "path": "docs/config/config.md",
+        "doc-section": "Configuration",
+        "description": "Application configuration options and settings",
+        "order": 9
+      }
+    ],
+    "sections": [
+      {
+        "name": "Getting Started",
+        "description": "Quick start guide and basic setup",
+        "order": 1
+      },
+      {
+        "name": "AppVital",
+        "description": "Core application components and vital functionality",
+        "order": 2
+      },
+      {
+        "name": "Container",
+        "description": "Dependency injection and container management",
+        "order": 3
+      },
+      {
+        "name": "HTTP",
+        "description": "HTTP handling, requests, and responses",
+        "order": 4
+      },
+      {
+        "name": "Auxiliary Parts",
+        "description": "Supporting utilities and helper functions",
+        "order": 5
+      },
+      {
+        "name": "Configuration",
+        "description": "Application configuration and settings",
+        "order": 6
+      }
+    ]
+  },
+  "features": {
+    "search": true,
+    "darkMode": true,
+    "responsive": true,
+    "tableOfContents": true,
+    "pagination": true,
+    "collapsibleNavigation": true
+  },
+  "metadata": {
+    "lastUpdated": "2024-01-01",
+    "generator": "Genes Documentation Generator",
+    "framework": "Genes v1.0.0"
   }
-
-]
+}

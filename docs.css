@@ -28,6 +28,12 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 #header h1 {
   margin: 0;
   font-size: 1.2rem;
@@ -87,6 +93,11 @@ body {
   transform: scale(1.05);
   box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.3);
   transition: all 0.2s ease;
+}
+
+/* Mobile Search Button - inherits icon-btn styles */
+.mobile-search-btn {
+  display: none;
 }
 
 /* Ripple effect for search bar */
@@ -152,15 +163,18 @@ body {
 }
 
 #search-results .result-title {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
 }
 
 #search-results .result-snippet {
-  font-size: 0.9em;
+  font-size: 0.9rem;
   color: #6a737d;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 #search-results .result-snippet .highlight {
@@ -173,6 +187,10 @@ body.dark #search-results .result-snippet {
   color: #9aa5b1;
 }
 
+body.dark #search-results .result-title {
+  color: #D4D4D4;
+}
+
 #container {
   grid-area: content;
   padding: 2rem;
@@ -181,13 +199,37 @@ body.dark #search-results .result-snippet {
   /* allow it to fill vertical space */
 }
 
-/* Footer */
-#footer {
-  padding: 1rem;
+/* Pagination Container */
+.pagination-container {
+  margin-top: 3rem;
+  padding-top: 2rem;
   border-top: 1px solid var(--border);
   text-align: center;
-  background-color: var(--sidebar-bg);
 }
+
+.pagination-container .btn-group {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.pagination-container .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.pagination-container .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+}
+
+.pagination-container .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
 
 nav {
   grid-area: sidebar;
@@ -195,6 +237,19 @@ nav {
   border-right: 1px solid var(--border);
   overflow-y: auto;
   transition: transform 0.3s ease;
+}
+
+.nav-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.close-nav-btn {
+  display: none;
+  color: var(--primary);
+  font-size: 1.2rem;
 }
 
 nav ul {
@@ -238,6 +293,95 @@ nav li.nav-section {
   cursor: default;
   font-size: 0.9rem;
   padding: 0 16px;
+}
+
+/* Collapsible Navigation Sections */
+.nav-section-container {
+  margin: 0;
+  border-bottom: 1px solid rgba(var(--primary-rgb), 0.1);
+}
+
+.nav-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.nav-section-header:hover {
+  background-color: rgba(var(--primary-rgb), 0.05);
+}
+
+.nav-section-title {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.nav-section-toggle {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-section-toggle:hover {
+  background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+.nav-section-toggle i {
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+}
+
+.nav-docs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.nav-section-container.expanded .nav-docs-list {
+  max-height: 500px; /* Adjust based on your needs */
+}
+
+.nav-docs-list li {
+  margin: 0;
+}
+
+.nav-docs-list a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  padding: 8px 16px 8px 32px; /* Indent documents under sections */
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  transition: background-color 0.2s, color 0.2s;
+  border-left: 2px solid transparent;
+}
+
+.nav-docs-list a:hover {
+  background-color: var(--bg);
+  color: var(--primary);
+}
+
+.nav-docs-list a.active {
+  background-color: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary);
+  border-left-color: var(--primary);
 }
 
 /* Dark theme variables */
@@ -397,6 +541,18 @@ h3 {
     padding: 1rem;
   }
   
+  /* Mobile pagination adjustments */
+  .pagination-container {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+  }
+  
+  .pagination-container .btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    min-width: 60px;
+  }
+  
   /* On This Page button visibility on mobile */
   #on-this-page-btn {
     display: block;
@@ -441,6 +597,22 @@ h3 {
     font-size: 1rem;
   }
   
+  /* Mobile search button and input adjustments */
+  #search {
+    display: none;
+  }
+  
+  .mobile-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Show close button on mobile */
+  .close-nav-btn {
+    display: flex;
+  }
+  
   /* Larger touch targets on mobile */
   .icon-btn {
     padding: 12px;
@@ -471,6 +643,241 @@ h3 {
 /* Prevent purple visited links in sidebar */
 nav a:visited {
   color: inherit;
+}
+
+/* Table Styling - Bootstrap Based */
+#content table {
+  width: 100%;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  background-color: var(--sidebar-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+}
+
+/* Bootstrap table classes */
+#content table.table {
+  background-color: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+#content table.table-striped > tbody > tr:nth-of-type(odd) > td {
+  background-color: transparent;
+}
+
+#content table.table-hover > tbody > tr:hover > td {
+  background-color: rgba(var(--primary-rgb), 0.05);
+  transition: background-color 0.15s ease-in-out;
+}
+
+#content table.table-bordered > thead > tr > th,
+#content table.table-bordered > tbody > tr > td {
+  border: 1px solid var(--border);
+}
+
+#content table.table-sm > thead > tr > th,
+#content table.table-sm > tbody > tr > td {
+  padding: 0.5rem;
+}
+
+#content table.table-responsive {
+  border: 0;
+}
+
+/* Bootstrap table variants */
+#content table.table-primary {
+  background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+#content table.table-secondary {
+  background-color: rgba(108, 117, 125, 0.1);
+}
+
+#content table.table-success {
+  background-color: rgba(25, 135, 84, 0.1);
+}
+
+#content table.table-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+#content table.table-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+#content table.table-info {
+  background-color: rgba(13, 202, 240, 0.1);
+}
+
+#content table.table-light {
+  background-color: rgba(248, 249, 250, 0.1);
+}
+
+#content table.table-dark {
+  background-color: rgba(33, 37, 41, 0.1);
+}
+
+/* Table header styling */
+#content table thead th {
+  background-color: var(--primary);
+  color: white;
+  font-weight: 600;
+  text-align: left;
+  padding: 1rem;
+  border: none;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Table body styling */
+#content table tbody td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+  background-color: var(--sidebar-bg);
+}
+
+#content table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Ensure proper table background */
+#content table tbody {
+  background-color: var(--sidebar-bg);
+}
+
+#content table tbody tr {
+  background-color: var(--sidebar-bg);
+}
+
+/* Table content styling */
+#content table td code {
+  background-color: rgba(var(--primary-rgb), 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875em;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}
+
+#content table td strong {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Dark theme adjustments */
+body.dark #content table {
+  background-color: var(--sidebar-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.dark #content table.table-sm > tbody > tr > td {
+  color: #ddd;
+}
+
+body.dark #content table.table-striped > tbody > tr:nth-of-type(odd) > td {
+  background-color: transparent;
+}
+
+body.dark #content table.table-hover > tbody > tr:hover > td {
+  background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+  #content table {
+    font-size: 0.85rem;
+    margin: 1rem 0;
+  }
+  
+  #content table th,
+  #content table td {
+    padding: 0.75rem;
+  }
+  
+  /* Make tables responsive with Bootstrap */
+  #content table.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile table card layout */
+  #content table.table-responsive {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+  
+  #content table.table-responsive thead {
+    display: none;
+  }
+  
+  #content table.table-responsive tbody,
+  #content table.table-responsive tr {
+    display: block;
+  }
+  
+  #content table.table-responsive tr {
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    background-color: var(--sidebar-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  #content table.table-responsive td {
+    display: block;
+    text-align: left;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    padding: 0.75rem 0.75rem 0.75rem 50%;
+    white-space: normal;
+    line-height: 1.5;
+    background-color: var(--sidebar-bg);
+  }
+  
+  #content table.table-responsive td:before {
+    content: attr(data-label) ": ";
+    position: absolute;
+    left: 0.75rem;
+    top: 0.75rem;
+    width: 45%;
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  #content table.table-responsive td:last-child {
+    border-bottom: none;
+  }
+  
+  /* Remove Bootstrap borders on mobile but keep our custom borders */
+  #content table.table-responsive.table-bordered > tbody > tr > td {
+    border: none;
+  }
+  
+  /* Ensure mobile table backgrounds are solid */
+  #content table.table-responsive tbody {
+    background-color: transparent;
+  }
+  
+  #content table.table-responsive tbody tr {
+    background-color: var(--sidebar-bg);
+  }
 }
 
 /* Inline code */
@@ -672,6 +1079,20 @@ body.dark .search-overlay-result-snippet {
   padding: 1px 2px;
   border-radius: 2px;
   font-weight: 600;
+}
+
+/* Search loading and hint states */
+.search-loading,
+.search-hint {
+  padding: 16px 20px;
+  text-align: center;
+  color: #6a737d;
+  font-style: italic;
+}
+
+body.dark .search-loading,
+body.dark .search-hint {
+  color: #9aa5b1;
 }
 
 /* On This Page Navigation */
